@@ -50,61 +50,66 @@
         <div id="searchResults"></div>
     </div>
 
+   
+
     <script>
-        // Replace with your actual Google Apps Script Web App URL
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3jXo0VEU4LkhHEXnV8fZBc3AChV_FE6XtghhWveJEm6rGR_05Jc8e5lS2WMD70s9crQ/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3jXo0VEU4LkhHEXnV8fZBc3AChV_FE6XtghhWveJEm6rGR_05Jc8e5lS2WMD70s9crQ/exec';
 
-        function submitDocument() {
-            const title = document.getElementById('documentTitle').value;
-            const content = document.getElementById('documentContent').value;
+    function submitDocument() {
+        const title = document.getElementById('documentTitle').value;
+        const content = document.getElementById('documentContent').value;
 
-            if (!title || !content) {
-                alert('Please enter both title and content');
-                return;
-            }
+        if (!title || !content) {
+            alert('Please enter both title and content');
+            return;
+        }
 
-            fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ title, content }),
-                headers: {
-                    'Content-Type': 'application/json'
+        fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ title, content }),
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Document submitted successfully!');
+                    document.getElementById('documentTitle').value = '';
+                    document.getElementById('documentContent').value = '';
+                } else {
+                    alert(`Error: ${data.message}`);
                 }
-            })
-            .then(response => {
-                alert('Document submitted successfully!');
-                // Clear input fields
-                document.getElementById('documentTitle').value = '';
-                document.getElementById('documentContent').value = '';
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Submission failed');
             });
-        }
+    }
 
-        function searchDocuments() {
-            const searchTerm = document.getElementById('searchInput').value;
-            const resultsDiv = document.getElementById('searchResults');
-            resultsDiv.innerHTML = 'Searching...';
+    function searchDocuments() {
+        const searchTerm = document.getElementById('searchInput').value;
+        const resultsDiv = document.getElementById('searchResults');
+        resultsDiv.innerHTML = 'Searching...';
 
-            fetch(`${APPS_SCRIPT_URL}?q=${searchTerm}`)
+        fetch(`${APPS_SCRIPT_URL}?q=${encodeURIComponent(searchTerm)}`)
             .then(response => response.json())
             .then(results => {
-                resultsDiv.innerHTML = results.length 
+                resultsDiv.innerHTML = results.length
                     ? results.map(result => `
                         <div>
                             <h3>${result[0]}</h3>
                             <p>${result[1]}</p>
                         </div>
-                    `).join('') 
+                    `).join('')
                     : 'No results found';
             })
             .catch(error => {
                 console.error('Search error:', error);
                 resultsDiv.innerHTML = 'Search failed';
             });
-        }
-    </script>
+    }
+</script>
+
 </body>
 </html>
