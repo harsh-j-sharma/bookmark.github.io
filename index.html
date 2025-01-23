@@ -2,108 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document Management System</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
         }
-        
-        body {
-            font-family: Arial, sans-serif;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-
-        .container {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        h1, h2 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
-
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            transition: border-color 0.3s ease;
-        }
-
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-
-        button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #2980b9;
-        }
-
-        #searchResults {
-            margin-top: 20px;
-        }
-
-        .result-item {
-            background-color: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 15px;
-            margin-bottom: 10px;
+        input, textarea { 
+            width: 100%; 
+            margin-bottom: 10px; 
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Document Management System</h1>
-        
-        <div>
-            <h2>Submit Document</h2>
-            <input 
-                type="text" 
-                id="documentTitle" 
-                placeholder="Document Title" 
-                required
-            >
-            <textarea 
-                id="documentContent" 
-                placeholder="Document Content" 
-                rows="5" 
-                required
-            ></textarea>
-            <button onclick="submitDocument()">Submit Document</button>
-        </div>
+    <h1>Document Management System</h1>
+    
+    <!-- Document Submission Section -->
+    <div>
+        <h2>Submit New Document</h2>
+        <input 
+            type="text" 
+            id="documentTitle" 
+            placeholder="Document Title" 
+            required
+        >
+        <textarea 
+            id="documentContent" 
+            placeholder="Document Content" 
+            rows="5" 
+            required
+        ></textarea>
+        <button onclick="submitDocument()">Submit Document</button>
     </div>
-
-    <div class="container">
+    
+    <!-- Document Search Section -->
+    <div>
         <h2>Search Documents</h2>
         <input 
-            type="search" 
+            type="text" 
             id="searchInput" 
-            placeholder="Search documents..."
+            placeholder="Enter search term"
         >
         <button onclick="searchDocuments()">Search</button>
         
@@ -111,94 +51,59 @@
     </div>
 
     <script>
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3jXo0VEU4LkhHEXnV8fZBc3AChV_FE6XtghhWveJEm6rGR_05Jc8e5lS2WMD70s9crQ/exec'; // Replace with your Web App URL
+        // Replace with your actual Google Apps Script Web App URL
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3jXo0VEU4LkhHEXnV8fZBc3AChV_FE6XtghhWveJEm6rGR_05Jc8e5lS2WMD70s9crQ/exec';
 
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.textContent = message;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background-color: ${type === 'error' ? '#e74c3c' : '#2ecc71'};
-                color: white;
-                padding: 10px 20px;
-                border-radius: 4px;
-                z-index: 1000;
-            `;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                document.body.removeChild(notification);
-            }, 3000);
-        }
-
-        async function submitDocument() {
-            const title = document.getElementById('documentTitle').value.trim();
-            const content = document.getElementById('documentContent').value.trim();
+        function submitDocument() {
+            const title = document.getElementById('documentTitle').value;
+            const content = document.getElementById('documentContent').value;
 
             if (!title || !content) {
-                showNotification('Please enter both title and content', 'error');
+                alert('Please enter both title and content');
                 return;
             }
 
-            try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'add', title, content }),
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const result = await response.json();
-                if (result.status === 'success') {
-                    showNotification('Document submitted successfully!');
-                    document.getElementById('documentTitle').value = '';
-                    document.getElementById('documentContent').value = '';
-                } else {
-                    showNotification(result.message, 'error');
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ title, content }),
+                headers: {
+                    'Content-Type': 'application/json'
                 }
-            } catch (error) {
-                console.error('Submission Error:', error);
-                showNotification('Failed to submit document', 'error');
-            }
+            })
+            .then(response => {
+                alert('Document submitted successfully!');
+                // Clear input fields
+                document.getElementById('documentTitle').value = '';
+                document.getElementById('documentContent').value = '';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Submission failed');
+            });
         }
 
-        async function searchDocuments() {
-            const searchTerm = document.getElementById('searchInput').value.trim();
+        function searchDocuments() {
+            const searchTerm = document.getElementById('searchInput').value;
             const resultsDiv = document.getElementById('searchResults');
-            
-            if (!searchTerm) {
-                showNotification('Please enter a search term', 'error');
-                return;
-            }
+            resultsDiv.innerHTML = 'Searching...';
 
-            resultsDiv.innerHTML = '<p>Searching...</p>';
-
-            try {
-                const response = await fetch(`${APPS_SCRIPT_URL}?q=${encodeURIComponent(searchTerm)}`);
-                const result = await response.json();
-
-                if (result.status === 'success') {
-                    const results = result.data;
-                    if (results.length > 0) {
-                        resultsDiv.innerHTML = results.map(row => `
-                            <div class="result-item">
-                                <h3>${row[0]}</h3>
-                                <p>${row[1]}</p>
-                            </div>
-                        `).join('');
-                    } else {
-                        resultsDiv.innerHTML = '<p>No results found.</p>';
-                    }
-                } else {
-                    showNotification(result.message, 'error');
-                    resultsDiv.innerHTML = '<p>Search failed.</p>';
-                }
-            } catch (error) {
-                console.error('Search Error:', error);
-                resultsDiv.innerHTML = '<p>Search failed. Please try again.</p>';
-                showNotification('Failed to perform search', 'error');
-            }
+            fetch(`${APPS_SCRIPT_URL}?q=${searchTerm}`)
+            .then(response => response.json())
+            .then(results => {
+                resultsDiv.innerHTML = results.length 
+                    ? results.map(result => `
+                        <div>
+                            <h3>${result[0]}</h3>
+                            <p>${result[1]}</p>
+                        </div>
+                    `).join('') 
+                    : 'No results found';
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                resultsDiv.innerHTML = 'Search failed';
+            });
         }
     </script>
 </body>
