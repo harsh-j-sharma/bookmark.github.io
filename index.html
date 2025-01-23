@@ -1,68 +1,111 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Google Docs Integration</title>
-    <script>
-        // Submit document to Google Sheets
-        function submitDocument() {
-            var title = document.getElementById('title').value;
-            var content = document.getElementById('content').value;
-            
-            fetch('https://script.google.com/macros/s/AKfycbz3jXo0VEU4LkhHEXnV8fZBc3AChV_FE6XtghhWveJEm6rGR_05Jc8e5lS2WMD70s9crQ/exec', {
-                method: 'POST',
-                body: JSON.stringify({
-                    title: title,
-                    content: content
-                }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert('Document submitted successfully!');
-            });
-        }
 
-        // Search documents
-        function searchDocuments() {
-            var searchTerm = document.getElementById('searchInput').value;
-            
-            fetch(`https://script.google.com/macros/s/AKfycbz3jXo0VEU4LkhHEXnV8fZBc3AChV_FE6XtghhWveJEm6rGR_05Jc8e5lS2WMD70s9crQ/exec?q=${searchTerm}`)
-            .then(response => response.json())
-            .then(results => {
-                var resultsDiv = document.getElementById('searchResults');
-                resultsDiv.innerHTML = '';
-                results.forEach(result => {
-                    resultsDiv.innerHTML += `
-                        <div>
-                            <h3>${result[0]}</h3>
-                            <p>${result[1]}</p>
-                        </div>
-                    `;
-                });
-            });
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Management System</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
         }
-    </script>
+        input, textarea { 
+            width: 100%; 
+            margin-bottom: 10px; 
+        }
+    </style>
 </head>
 <body>
     <h1>Document Management System</h1>
     
-    <!-- Document Submission Form -->
+    <!-- Document Submission Section -->
     <div>
-        <h2>Submit Document</h2>
-        <input type="text" id="title" placeholder="Document Title">
-        <textarea id="content" placeholder="Document Content"></textarea>
-        <button onclick="submitDocument()">Submit</button>
+        <h2>Submit New Document</h2>
+        <input 
+            type="text" 
+            id="documentTitle" 
+            placeholder="Document Title" 
+            required
+        >
+        <textarea 
+            id="documentContent" 
+            placeholder="Document Content" 
+            rows="5" 
+            required
+        ></textarea>
+        <button onclick="submitDocument()">Submit Document</button>
     </div>
     
-    <!-- Document Search -->
+    <!-- Document Search Section -->
     <div>
         <h2>Search Documents</h2>
-        <input type="text" id="searchInput" placeholder="Search Term">
+        <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Enter search term"
+        >
         <button onclick="searchDocuments()">Search</button>
         
         <div id="searchResults"></div>
     </div>
+
+    <script>
+        // Replace with your actual Google Apps Script Web App URL
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3jXo0VEU4LkhHEXnV8fZBc3AChV_FE6XtghhWveJEm6rGR_05Jc8e5lS2WMD70s9crQ/exec';
+
+        function submitDocument() {
+            const title = document.getElementById('documentTitle').value;
+            const content = document.getElementById('documentContent').value;
+
+            if (!title || !content) {
+                alert('Please enter both title and content');
+                return;
+            }
+
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ title, content }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                alert('Document submitted successfully!');
+                // Clear input fields
+                document.getElementById('documentTitle').value = '';
+                document.getElementById('documentContent').value = '';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Submission failed');
+            });
+        }
+
+        function searchDocuments() {
+            const searchTerm = document.getElementById('searchInput').value;
+            const resultsDiv = document.getElementById('searchResults');
+            resultsDiv.innerHTML = 'Searching...';
+
+            fetch(`${APPS_SCRIPT_URL}?q=${searchTerm}`)
+            .then(response => response.json())
+            .then(results => {
+                resultsDiv.innerHTML = results.length 
+                    ? results.map(result => `
+                        <div>
+                            <h3>${result[0]}</h3>
+                            <p>${result[1]}</p>
+                        </div>
+                    `).join('') 
+                    : 'No results found';
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                resultsDiv.innerHTML = 'Search failed';
+            });
+        }
+    </script>
 </body>
 </html>
