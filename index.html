@@ -105,15 +105,15 @@
                 id="documentTitle" 
                 placeholder="Document Title" 
                 required 
-                maxlength="1"
+                maxlength="100"
             >
             <textarea 
                 id="documentContent" 
                 placeholder="Enter document content (10-5000 characters)" 
-                rows="20" 
+                rows="5" 
                 required
-                minlength="1"
-                maxlength="50000"
+                minlength="10"
+                maxlength="5000"
             ></textarea>
             <div id="submitFeedback" class="feedback"></div>
             <button onclick="documentManager.submitDocument()">Submit Document</button>
