@@ -50,12 +50,6 @@
             transition: all 0.3s ease;
         }
 
-        input:focus, textarea:focus {
-            border-color: var(--secondary-color);
-            outline: none;
-            box-shadow: 0 0 5px rgba(52,152,219,0.5);
-        }
-
         button {
             background-color: var(--secondary-color);
             color: white;
@@ -81,51 +75,59 @@
             margin-bottom: 10px;
         }
 
+        .error-message {
+            color: red;
+            margin-bottom: 10px;
+        }
+
+        .success-message {
+            color: green;
+            margin-bottom: 10px;
+        }
+
         @media screen and (max-width: 600px) {
             .container {
                 width: 100%;
                 padding: 15px;
-            }
-
-            .section {
-                padding: 10px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Advanced Document Management</h1>
+        <h1>Document Management System</h1>
 
         <!-- Document Submission Section -->
-        <div class="section" id="submitSection">
+        <div class="section">
             <h2>Submit Document</h2>
+            <div id="submitErrorMessage" class="error-message"></div>
+            <div id="submitSuccessMessage" class="success-message"></div>
+            
             <input 
                 type="text" 
                 id="documentTitle" 
-                placeholder="Document Title" 
-                required 
-                maxlength="100"
+                placeholder="Document Title (Max 100 characters)" 
+                maxlength="100" 
+                required
             >
             <textarea 
                 id="documentContent" 
-                placeholder="Enter document content (10-5000 characters)" 
+                placeholder="Document Content (10-5000 characters)" 
                 rows="5" 
+                minlength="10" 
+                maxlength="5000" 
                 required
-                minlength="10"
-                maxlength="5000"
             ></textarea>
-            <div id="submitFeedback" class="feedback"></div>
             <button onclick="documentManager.submitDocument()">Submit Document</button>
         </div>
 
         <!-- Document Search Section -->
-        <div class="section" id="searchSection">
+        <div class="section">
             <h2>Search Documents</h2>
             <input 
                 type="search" 
                 id="searchInput" 
-                placeholder="Search by title or content" 
+                placeholder="Search by title or content"
                 oninput="documentManager.debounceSearch()"
             >
             <div id="searchResults"></div>
@@ -133,115 +135,138 @@
     </div>
 
     <script>
-        class DocumentManager {
-            constructor() {
-                this.API_ENDPOINT = 'https://script.google.com/macros/s/AKfycbz3jXo0VEU4LkhHEXnV8fZBc3AChV_FE6XtghhWveJEm6rGR_05Jc8e5lS2WMD70s9crQ/exec';
-                this.searchTimeout = null;
-                this.rateLimitCounter = 0;
-                this.MAX_REQUESTS = 10;
+    class DocumentManager {
+        constructor() {
+            // Replace with your actual Google Apps Script Web App URL
+            this.API_ENDPOINT = 'https://script.google.com/macros/s/AKfycbz3jXo0VEU4LkhHEXnV8fZBc3AChV_FE6XtghhWveJEm6rGR_05Jc8e5lS2WMD70s9crQ/exec';
+            this.searchTimeout = null;
+        }
+
+        clearMessages() {
+            document.getElementById('submitErrorMessage').textContent = '';
+            document.getElementById('submitSuccessMessage').textContent = '';
+        }
+
+        displayError(message) {
+            this.clearMessages();
+            const errorElement = document.getElementById('submitErrorMessage');
+            errorElement.textContent = message;
+        }
+
+        displaySuccess(message) {
+            this.clearMessages();
+            const successElement = document.getElementById('submitSuccessMessage');
+            successElement.textContent = message;
+        }
+
+        validateInput(title, content) {
+            if (!title || title.trim().length === 0) {
+                throw new Error('Title is required');
             }
 
-            validateInput(data) {
-                const errors = [];
-                const titleRegex = /^[a-zA-Z0-9\s]+$/;
-
-                if (!data.title || data.title.length > 100 || !titleRegex.test(data.title)) {
-                    errors.push('Invalid title. Use alphanumeric characters, max 100 chars.');
-                }
-
-                if (!data.content || data.content.length < 10 || data.content.length > 5000) {
-                    errors.push('Content must be between 10-5000 characters.');
-                }
-
-                return errors;
+            if (title.length > 100) {
+                throw new Error('Title must be 100 characters or less');
             }
 
-            handleError(message) {
-                const feedbackElement = document.getElementById('submitFeedback');
-                feedbackElement.textContent = message;
-                feedbackElement.style.color = 'red';
-                console.error(message);
+            if (!content || content.trim().length < 10) {
+                throw new Error('Content must be at least 10 characters');
             }
 
-            async submitDocument() {
-                const titleElement = document.getElementById('documentTitle');
-                const contentElement = document.getElementById('documentContent');
-                const feedbackElement = document.getElementById('submitFeedback');
-
-                const documentData = {
-                    title: titleElement.value.trim(),
-                    content: contentElement.value.trim()
-                };
-
-                const validationErrors = this.validateInput(documentData);
-                if (validationErrors.length) {
-                    this.handleError(validationErrors.join(' '));
-                    return;
-                }
-
-                try {
-                    const response = await fetch(this.API_ENDPOINT, {
-                        method: 'POST',
-                        mode: 'cors',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(documentData)
-                    });
-
-                    const result = await response.json();
-
-                    if (result.status === 'success') {
-                        feedbackElement.textContent = 'Document submitted successfully!';
-                        feedbackElement.style.color = 'green';
-                        titleElement.value = '';
-                        contentElement.value = '';
-                    } else {
-                        this.handleError(result.message || 'Submission failed');
-                    }
-                } catch (error) {
-                    this.handleError('Network error. Please try again.');
-                }
-            }
-
-            debounceSearch() {
-                clearTimeout(this.searchTimeout);
-                this.searchTimeout = setTimeout(() => this.searchDocuments(), 500);
-            }
-
-            async searchDocuments() {
-                const searchTerm = document.getElementById('searchInput').value.trim();
-                const resultsDiv = document.getElementById('searchResults');
-
-                if (searchTerm.length < 2) {
-                    resultsDiv.innerHTML = '';
-                    return;
-                }
-
-                resultsDiv.innerHTML = '<p>Searching...</p>';
-
-                try {
-                    const response = await fetch(`${this.API_ENDPOINT}?q=${encodeURIComponent(searchTerm)}`);
-                    const results = await response.json();
-
-                    if (results.length) {
-                        resultsDiv.innerHTML = results.map(result => `
-                            <div class="result-item">
-                                <h3>${result[0]}</h3>
-                                <p>${result[1].substring(0, 200)}${result[1].length > 200 ? '...' : ''}</p>
-                            </div>
-                        `).join('');
-                    } else {
-                        resultsDiv.innerHTML = '<p>No results found.</p>';
-                    }
-                } catch (error) {
-                    resultsDiv.innerHTML = '<p>Search failed. Please try again.</p>';
-                    console.error('Search error:', error);
-                }
+            if (content.length > 5000) {
+                throw new Error('Content must be 5000 characters or less');
             }
         }
 
-        const documentManager = new DocumentManager();
+        async submitDocument() {
+            const titleElement = document.getElementById('documentTitle');
+            const contentElement = document.getElementById('documentContent');
+            
+            const title = titleElement.value.trim();
+            const content = contentElement.value.trim();
+
+            try {
+                // Validate input
+                this.validateInput(title, content);
+
+                // Prepare submission data
+                const documentData = { title, content };
+
+                // Submit document
+                const response = await fetch(this.API_ENDPOINT, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(documentData)
+                });
+
+                // Check response
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    this.displaySuccess('Document submitted successfully!');
+                    
+                    // Clear input fields
+                    titleElement.value = '';
+                    contentElement.value = '';
+                } else {
+                    throw new Error(result.message || 'Submission failed');
+                }
+
+            } catch (error) {
+                this.displayError(error.message);
+                console.error('Submission error:', error);
+            }
+        }
+
+        debounceSearch() {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => this.searchDocuments(), 500);
+        }
+
+        async searchDocuments() {
+            const searchTerm = document.getElementById('searchInput').value.trim();
+            const resultsDiv = document.getElementById('searchResults');
+
+            if (searchTerm.length < 2) {
+                resultsDiv.innerHTML = '';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<p>Searching...</p>';
+
+            try {
+                const response = await fetch(`${this.API_ENDPOINT}?q=${encodeURIComponent(searchTerm)}`);
+                
+                if (!response.ok) {
+                    throw new Error('Search request failed');
+                }
+
+                const results = await response.json();
+
+                if (results && results.length) {
+                    resultsDiv.innerHTML = results.map(result => `
+                        <div class="result-item">
+                            <h3>${result[0]}</h3>
+                            <p>${result[1].substring(0, 200)}${result[1].length > 200 ? '...' : ''}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    resultsDiv.innerHTML = '<p>No results found.</p>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = '<p>Search failed. Please try again.</p>';
+                console.error('Search error:', error);
+            }
+        }
+    }
+
+    const documentManager = new DocumentManager();
     </script>
 </body>
 </html>
