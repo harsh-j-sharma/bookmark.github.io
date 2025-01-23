@@ -1,45 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Input & Search</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 20px;
+    <title>Google Docs Integration</title>
+    <script>
+        // Submit document to Google Sheets
+        function submitDocument() {
+            var title = document.getElementById('title').value;
+            var content = document.getElementById('content').value;
+            
+            fetch('https://script.google.com/macros/s/AKfycbz3jXo0VEU4LkhHEXnV8fZBc3AChV_FE6XtghhWveJEm6rGR_05Jc8e5lS2WMD70s9crQ/exec', {
+                method: 'POST',
+                body: JSON.stringify({
+                    title: title,
+                    content: content
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Document submitted successfully!');
+            });
         }
-        input, button {
-            margin: 10px;
-            padding: 10px;
-            font-size: 16px;
+
+        // Search documents
+        function searchDocuments() {
+            var searchTerm = document.getElementById('searchInput').value;
+            
+            fetch(`https://script.google.com/macros/s/AKfycbz3jXo0VEU4LkhHEXnV8fZBc3AChV_FE6XtghhWveJEm6rGR_05Jc8e5lS2WMD70s9crQ/exec?q=${searchTerm}`)
+            .then(response => response.json())
+            .then(results => {
+                var resultsDiv = document.getElementById('searchResults');
+                resultsDiv.innerHTML = '';
+                results.forEach(result => {
+                    resultsDiv.innerHTML += `
+                        <div>
+                            <h3>${result[0]}</h3>
+                            <p>${result[1]}</p>
+                        </div>
+                    `;
+                });
+            });
         }
-        #results {
-            margin-top: 20px;
-            border: 1px solid #ddd;
-            padding: 10px;
-        }
-    </style>
+    </script>
 </head>
 <body>
-    <h1>Save & Search Text in Google Sheet</h1>
-
-    <!-- Form to Add Text -->
-    <form id="textForm">
-        <input type="text" id="textInput" placeholder="Enter your text here" required />
-        <button type="submit">Submit</button>
-    </form>
-
-    <!-- Form to Search Text -->
-    <form id="searchForm">
-        <input type="text" id="searchInput" placeholder="Search text here" required />
-        <button type="submit">Search</button>
-    </form>
-
-    <!-- Area to Display Results -->
-    <div id="results"></div>
-
-    <script src="script.js"></script>
+    <h1>Document Management System</h1>
+    
+    <!-- Document Submission Form -->
+    <div>
+        <h2>Submit Document</h2>
+        <input type="text" id="title" placeholder="Document Title">
+        <textarea id="content" placeholder="Document Content"></textarea>
+        <button onclick="submitDocument()">Submit</button>
+    </div>
+    
+    <!-- Document Search -->
+    <div>
+        <h2>Search Documents</h2>
+        <input type="text" id="searchInput" placeholder="Search Term">
+        <button onclick="searchDocuments()">Search</button>
+        
+        <div id="searchResults"></div>
+    </div>
 </body>
 </html>
