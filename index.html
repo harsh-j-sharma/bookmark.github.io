@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,8 +12,7 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            line-height: 1.6;
+            font-family: Arial, sans-serif;
             color: #333;
             max-width: 800px;
             margin: 0 auto;
@@ -26,7 +24,7 @@
             background-color: white;
             border-radius: 8px;
             padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
 
@@ -76,16 +74,6 @@
             padding: 15px;
             margin-bottom: 10px;
         }
-
-        @media screen and (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-            
-            .container {
-                padding: 15px;
-            }
-        }
     </style>
 </head>
 <body>
@@ -123,10 +111,8 @@
     </div>
 
     <script>
-        // Configuration
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3jXo0VEU4LkhHEXnV8fZBc3AChV_FE6XtghhWveJEm6rGR_05Jc8e5lS2WMD70s9crQ/exec
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3jXo0VEU4LkhHEXnV8fZBc3AChV_FE6XtghhWveJEm6rGR_05Jc8e5lS2WMD70s9crQ/exec'; // Replace with your Web App URL
 
-        // Enhanced Error Handling
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
             notification.textContent = message;
@@ -147,7 +133,7 @@
             }, 3000);
         }
 
-        function submitDocument() {
+        async function submitDocument() {
             const title = document.getElementById('documentTitle').value.trim();
             const content = document.getElementById('documentContent').value.trim();
 
@@ -156,26 +142,28 @@
                 return;
             }
 
-            fetch(APPS_SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify({ title, content }),
-                headers: {
-                    'Content-Type': 'application/json'
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'add', title, content }),
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    showNotification('Document submitted successfully!');
+                    document.getElementById('documentTitle').value = '';
+                    document.getElementById('documentContent').value = '';
+                } else {
+                    showNotification(result.message, 'error');
                 }
-            })
-            .then(response => response.json())
-            .then(data => {
-                showNotification('Document submitted successfully!');
-                document.getElementById('documentTitle').value = '';
-                document.getElementById('documentContent').value = '';
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Submission Error:', error);
                 showNotification('Failed to submit document', 'error');
-            });
+            }
         }
 
-        function searchDocuments() {
+        async function searchDocuments() {
             const searchTerm = document.getElementById('searchInput').value.trim();
             const resultsDiv = document.getElementById('searchResults');
             
@@ -186,28 +174,32 @@
 
             resultsDiv.innerHTML = '<p>Searching...</p>';
 
-            fetch(`${APPS_SCRIPT_URL}?q=${encodeURIComponent(searchTerm)}`)
-            .then(response => response.json())
-            .then(results => {
-                if (!results || results.length === 0) {
-                    resultsDiv.innerHTML = '<p>No results found</p>';
-                    return;
-                }
+            try {
+                const response = await fetch(`${APPS_SCRIPT_URL}?q=${encodeURIComponent(searchTerm)}`);
+                const result = await response.json();
 
-                resultsDiv.innerHTML = results.map(result => `
-                    <div class="result-item">
-                        <h3>${result[0]}</h3>
-                        <p>${result[1]}</p>
-                    </div>
-                `).join('');
-            })
-            .catch(error => {
+                if (result.status === 'success') {
+                    const results = result.data;
+                    if (results.length > 0) {
+                        resultsDiv.innerHTML = results.map(row => `
+                            <div class="result-item">
+                                <h3>${row[0]}</h3>
+                                <p>${row[1]}</p>
+                            </div>
+                        `).join('');
+                    } else {
+                        resultsDiv.innerHTML = '<p>No results found.</p>';
+                    }
+                } else {
+                    showNotification(result.message, 'error');
+                    resultsDiv.innerHTML = '<p>Search failed.</p>';
+                }
+            } catch (error) {
                 console.error('Search Error:', error);
                 resultsDiv.innerHTML = '<p>Search failed. Please try again.</p>';
                 showNotification('Failed to perform search', 'error');
-            });
+            }
         }
     </script>
 </body>
 </html>
-            
