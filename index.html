@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Input & Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        input, button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        #results {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Save & Search Text in Google Sheet</h1>
+
+    <!-- Form to Add Text -->
+    <form id="textForm">
+        <input type="text" id="textInput" placeholder="Enter your text here" required />
+        <button type="submit">Submit</button>
+    </form>
+
+    <!-- Form to Search Text -->
+    <form id="searchForm">
+        <input type="text" id="searchInput" placeholder="Search text here" required />
+        <button type="submit">Search</button>
+    </form>
+
+    <!-- Area to Display Results -->
+    <div id="results"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
