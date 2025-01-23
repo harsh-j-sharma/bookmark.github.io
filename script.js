@@ -27,7 +27,7 @@ searchForm.addEventListener("submit", async function (event) {
     const searchInput = document.getElementById("searchInput").value;
 
     try {
-        const response = await fetch("YOUR_GOOGLE_SCRIPT_URL", {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzsNxLxE9R3D8aPm7YrN0Hr3NxG9CBSrG6J0QDriAJuQyPycZ9ppjyVV6FjDLZPM2wM/exec", {
             method: "POST",
             body: JSON.stringify({ action: "search", query: searchInput }),
             headers: { "Content-Type": "application/json" },
